@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule a Meeting | Modern Calendar</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #64748b;
+            --success: #10b981;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f6f8ff 0%, #f0f4ff 100%);
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .page-container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .scheduler-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: #f8fafc;
+            padding: 2rem;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .calendar-day:hover {
+            background: #f1f5f9;
+        }
+
+        .calendar-day.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .calendar-day.has-events::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .time-slot {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .time-slot:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .time-slot.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .meeting-type {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .meeting-type:hover {
+            border-color: var(--primary);
+        }
+
+        .meeting-type.selected {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .meeting-type-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .meeting-icon {
+            width: 40px;
+            height: 40px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .btn-schedule {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .btn-schedule:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .selected-date {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+        }
+
+        @media (max-width: 992px) {
+            .scheduler-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            border-color: #e2e8f0;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="scheduler-grid">
+            <div class="sidebar">
+                <h4 class="mb-4">Select Meeting Type</h4>
+                
+                <div class="meeting-type selected mb-3">
+                    <div class="meeting-type-header">
+                        <div class="meeting-icon">
+                            <i class="bi bi-camera-video"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Video Call</h5>
+                            <small class="text-muted">30 minutes</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meeting-type mb-3">
+                    <div class="meeting-type-header">
+                        <div class="meeting-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Team Meeting</h5>
+                            <small class="text-muted">1 hour</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meeting-type mb-4">
+                    <div class="meeting-type-header">
+                        <div class="meeting-icon">
+                            <i class="bi bi-person-workspace"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Consultation</h5>
+                            <small class="text-muted">45 minutes</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label">Your Name</label>
+                    <input type="text" class="form-control" placeholder="Enter your name">
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-control" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Meeting Notes</label>
+                    <textarea class="form-control" rows="4" placeholder="Add any relevant details or agenda items"></textarea>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="calendar-header">
+                    <h4>Select Date & Time</h4>
+                    <div class="month-nav">
+                        <button class="nav-btn"><i class="bi bi-chevron-left"></i></button>
+                        <h5 class="mb-0">November 2024</h5>
+                        <button class="nav-btn"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="calendar-grid mb-4">
+                    <div class="calendar-day text-muted">Sun</div>
+                    <div class="calendar-day text-muted">Mon</div>
+                    <div class="calendar-day text-muted">Tue</div>
+                    <div class="calendar-day text-muted">Wed</div>
+                    <div class="calendar-day text-muted">Thu</div>
+                    <div class="calendar-day text-muted">Fri</div>
+                    <div class="calendar-day text-muted">Sat</div>
+
+                    <div class="calendar-day has-events">1</div>
+                    <div class="calendar-day">2</div>
+                    <div class="calendar-day">3</div>
+                    <div class="calendar-day has-events">4</div>
+                    <div class="calendar-day">5</div>
+                    <div class="calendar-day">6</div>
+                    <div class="calendar-day">7</div>
+                    <div class="calendar-day">8</div>
+                    <div class="calendar-day">9</div>
+                    <div class="calendar-day">10</div>
+                    <div class="calendar-day">11</div>
+                    <div class="calendar-day">12</div>
+                    <div class="calendar-day">13</div>
+                    <div class="calendar-day">14</div>
+                    <div class="calendar-day">15</div>
+                    <div class="calendar-day">16</div>
+                    <div class="calendar-day">17</div>
+                    <div class="calendar-day">18</div>
+                    <div class="calendar-day">19</div>
+                    <div class="calendar-day">20</div>
+                    <div class="calendar-day">21</div>
+                    <div class="calendar-day">22</div>
+                    <div class="calendar-day">23</div>
+                    <div class="calendar-day">24</div>
+                    <div class="calendar-day">25</div>
+                    <div class="calendar-day">26</div>
+                    <div class="calendar-day">27</div>
+                    <div class="calendar-day">28</div>
+                    <div class="calendar-day">29</div>
+                    <div class="calendar-day">30</div>
+                </div>
+
+                <div class="time-slots">
+                    <div class="time-slot">9:00 AM</div>
+                    <div class="time-slot">10:00 AM</div>
+                    <div class="time-slot">11:00 AM</div>
+                    <div class="time-slot">12:00 PM</div>
+                    <div class="time-slot">1:00 PM</div>
+                    <div class="time-slot">2:00 PM</div>
+                    <div class="time-slot">3:00 PM</div>
+                    <div class="time-slot">4:00 PM</div>
+                    <div class="time-slot">5:00 PM</div>
+                </div>
+
+                <div class="selected-date">Select Date</div>
+
+                <button class="btn-schedule">
+                    Confirm Meeting
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Time slot selection
+        document.querySelectorAll('.time-slot').forEach(slot => {
+            slot.addEventListener('click', () => {
+                document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                slot.classList.add('selected');
+            });
+        });
+
+        // Calendar day selection
+        document.querySelectorAll('.calendar-day').forEach(day => {
+            day.addEventListener('click', () => {
+                // Remove active class from all days
+                document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('active'));
+                // Add active class to clicked day
+                day.classList.add('active');
+                // Update selected date text
+                document.querySelector('.selected-date').textContent = `${day.textContent}, November 2024`;
+            });
+        });
+
+        // Handle meeting confirmation
+        document.querySelector('.btn-schedule').addEventListener('click', () => {
+            const selectedDay = document.querySelector('.calendar-day.active');
+            const selectedSlot = document.querySelector('.time-slot.selected');
+            const meetingType = document.querySelector('.meeting-type.selected h5').textContent;
+            const name = document.querySelector('input[type="text"]').value;
+            const email = document.querySelector('input[type="email"]').value;
+            const notes = document.querySelector('textarea').value;
+
+            if (!selectedDay || !selectedSlot) {
+                alert('Please select a date and time for the meeting.');
+                return;
+            }
+
+            if (!name || !email) {
+                alert('Please fill in your name and email address.');
+                return;
+            }
+
+            // Confirmation message
+            alert(`Meeting scheduled:
+- Type: ${meetingType}
+- Date: ${selectedDay.textContent}, November 2024
+- Time: ${selectedSlot.textContent}
+- Name: ${name}
+- Email: ${email}
+- Notes: ${notes}`);
+        });
+    </script>
+</body>
+</html>
