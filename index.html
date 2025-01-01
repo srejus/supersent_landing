@@ -352,9 +352,13 @@
                   body: new URLSearchParams(data)
               });
 
-              if (response.ok) {
-                  const result = await response.json();
+              const result = await response.json();
+              if (result.success) {
                   alert("Your Message Submitted Successfully!")
+                  document.getElementById('name').value = '';
+                  document.getElementById('email').value = '';
+                  document.getElementById('phone').value = '';
+                  document.getElementById('message').value = '';
               } else {
                   alert("Oops something went wrong try again later!")
               }
