@@ -353,15 +353,13 @@
               });
 
               const result = await response.json();
-              if (result.status === 'success') {
-                  alert("Your Message Submitted Successfully!")
-                  document.getElementById('name').value = '';
-                  document.getElementById('email').value = '';
-                  document.getElementById('phone').value = '';
-                  document.getElementById('message').value = '';
-              } else {
-                  alert("Oops something went wrong try again later!")
-              }
+              
+              alert("Your Message Submitted Successfully!")
+              document.getElementById('name').value = '';
+              document.getElementById('email').value = '';
+              document.getElementById('phone').value = '';
+              document.getElementById('message').value = '';
+             
           } catch (error) {
               alert("Oops something went wrong try again later!")
           }
